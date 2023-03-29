@@ -4,9 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="edbacf97-a823-4a20-95fb-5ed311bac51a" name="Changes" comment="all functions finished">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/db.csv" beforeDir="false" afterPath="$PROJECT_DIR$/db.csv" afterDir="false" />
+    <list default="true" id="edbacf97-a823-4a20-95fb-5ed311bac51a" name="Changes" comment="BugFixes">
       <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -51,7 +49,7 @@
       <option name="presentableId" value="Default" />
       <updated>1679927662149</updated>
       <workItem from="1679927663150" duration="5695000" />
-      <workItem from="1680124593553" duration="4568000" />
+      <workItem from="1680124593553" duration="5111000" />
     </task>
     <task id="LOCAL-00001" summary="First patch">
       <created>1679938794859</created>
@@ -67,7 +65,14 @@
       <option name="project" value="LOCAL" />
       <updated>1680127601085</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="BugFixes">
+      <created>1680129516923</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1680129516923</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -87,6 +92,7 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="First patch" />
     <MESSAGE value="all functions finished" />
-    <option name="LAST_COMMIT_MESSAGE" value="all functions finished" />
+    <MESSAGE value="BugFixes" />
+    <option name="LAST_COMMIT_MESSAGE" value="BugFixes" />
   </component>
 </project>

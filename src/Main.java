@@ -13,7 +13,7 @@ public class Main {
                 try {
                 System.out.print("Enter command: ");
                 command = input.nextLine().trim().toLowerCase();
-                String[] command_full = command.toString().split(" ", 2);
+                String[] command_full = command.split(" ", 2);
 
                 switch (command_full[0]) {
                     case "print":
@@ -46,32 +46,32 @@ public class Main {
                 }catch (ArrayIndexOutOfBoundsException e){
                     System.out.println("Wrong command!");
                 }
-            } while (!command.equals("exit"));
+            } while (!Objects.equals(command, "exit"));
         
         input.close();
     }
 
     private static void print() {
         // code to display all records in the db.csv file
-        String[][][] array3D = read_csv(FILE_NAME, 6);
+        String[][][] array3D = read_csv(FILE_NAME);
         // print the 3D array
         System.out.println("------------------------------------------------------------");
         System.out.format("%-4s%-21s%-11s%-6s%-10s%-8s%n", "ID", "City", "Date", "Days", "Price", "Vehicle");
         System.out.println("------------------------------------------------------------");
-        for (int i = 0; i < array3D.length; i++) {
-            System.out.format("%-4s%-21s%-11s%-6s%-10s%-8s%n", array3D[i][0][0], array3D[i][1][0], array3D[i][2][0],
-                    array3D[i][3][0], array3D[i][4][0], array3D[i][5][0]);
+        for (String[][] strings : array3D) {
+            System.out.format("%-4s%-21s%-11s%-6s%-10s%-8s%n", strings[0][0], strings[1][0], strings[2][0],
+                    strings[3][0], strings[4][0], strings[5][0]);
         }
         System.out.println("------------------------------------------------------------");
     }
 
     public static void add(String field) {
-        String[] fields = field.toString().split(";");
+        String[] fields = field.split(";");
         if (fields.length != 6) {
             System.out.println("wrong field count");
             return;
         }
-        String id = "";
+        String id;
         try {
             id = fields[0];
             if (!id.matches("\\d{3}")) {
@@ -87,19 +87,19 @@ public class Main {
         String[] cityWords = city.split("\\s");
         StringBuilder cityCapitalized = new StringBuilder();
         for (String word : cityWords) {
-            cityCapitalized.append(Character.toUpperCase(word.charAt(0)) + word.substring(1)).append(" ");
+            cityCapitalized.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1)).append(" ");
         }
         city = cityCapitalized.toString().trim();
 
         String date = fields[2];
-        int days = 0;
+        int days;
         try {
             days = Integer.parseInt(fields[3]);
         } catch (NumberFormatException e) {
             System.out.println("wrong days");
             return;
         }
-        double price = 0.0;
+        double price;
         try {
             price = Double.parseDouble(fields[4]);
         } catch (NumberFormatException e) {
@@ -121,10 +121,9 @@ public class Main {
     }
 
     public static void del(String tokens) {
-        String id = tokens;
 
         // Check if id is a 3-digit integer
-        if (!id.matches("\\d{3}")) {
+        if (!tokens.matches("\\d{3}")) {
             System.out.println("wrong id");
             return;
         }
@@ -142,7 +141,7 @@ public class Main {
         boolean idFound = false;
         for (Iterator<String> it = lines.iterator(); it.hasNext(); ) {
             String line = it.next();
-            if (line.startsWith(id + ";")) {
+            if (line.startsWith(tokens + ";")) {
                 it.remove();
                 idFound = true;
                 break;
@@ -181,7 +180,7 @@ public class Main {
         String[] cityWords = city.split("\\s");
         StringBuilder cityCapitalized = new StringBuilder();
         for (String word : cityWords) {
-            cityCapitalized.append(Character.toUpperCase(word.charAt(0)) + word.substring(1)).append(" ");
+            cityCapitalized.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1)).append(" ");
         }
         city = cityCapitalized.toString().trim();
 
@@ -189,7 +188,7 @@ public class Main {
         String days = fields[3];
         String price = fields[4];
         String vehicle = fields[5].toUpperCase();
-        if (!vehicle.equals("PLANE") && !vehicle.equals("BUS") && !vehicle.equals("TRAIN") && !vehicle.equals("BOAT")) {
+        if (!vehicle.equals("PLANE") && !vehicle.equals("BUS") && !vehicle.equals("TRAIN") && !vehicle.equals("BOAT") && !vehicle.equals("")) {
             System.out.println("wrong vehicle");
             return;
         }
@@ -254,7 +253,7 @@ public class Main {
     }
 
     public static void sort() {
-        String[][][] array3D = read_csv(FILE_NAME, 6);
+        String[][][] array3D = read_csv(FILE_NAME);
 
         Arrays.sort(array3D, (a, b) -> {
             String[] date1 = a[2][0].split("/");
@@ -275,8 +274,8 @@ public class Main {
         });
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter("db.csv"))) {
-            for (int i = 0; i < array3D.length; i++) {
-                writer.write(array3D[i][0][0] + ";" + array3D[i][1][0] + ";" + array3D[i][2][0] + ";" + array3D[i][3][0] + ";" + array3D[i][4][0] + ";" + array3D[i][5][0]);
+            for (String[][] strings : array3D) {
+                writer.write(strings[0][0] + ";" + strings[1][0] + ";" + strings[2][0] + ";" + strings[3][0] + ";" + strings[4][0] + ";" + strings[5][0]);
                 writer.newLine();
             }
         } catch (IOException e) {
@@ -289,18 +288,18 @@ public class Main {
         String[] fields = tokens.split(" ");
         double targetPrice = Double.parseDouble(fields[0]);
 
-        String[][][] trips = read_csv(FILE_NAME, 6);
+        String[][][] trips = read_csv(FILE_NAME);
         boolean found = false;
 
         System.out.println("------------------------------------------------------------");
         System.out.format("%-4s%-21s%-11s%-6s%-10s%-8s%n", "ID", "City", "Date", "Days", "Price", "Vehicle");
         System.out.println("------------------------------------------------------------");
 
-        for (int i = 0; i < trips.length; i++) {
-            double price = Double.parseDouble(trips[i][4][0]);
+        for (String[][] trip : trips) {
+            double price = Double.parseDouble(trip[4][0]);
             if (price <= targetPrice) {
                 System.out.format("%-4s%-21s%-11s%-6s%-10s%-8s%n",
-                        trips[i][0][0], trips[i][1][0], trips[i][2][0], trips[i][3][0], trips[i][4][0], trips[i][5][0]);
+                        trip[0][0], trip[1][0], trip[2][0], trip[3][0], trip[4][0], trip[5][0]);
                 found = true;
             }
         }
@@ -311,14 +310,14 @@ public class Main {
     }
 
     private static void avg() {
-        String[][][] array3D = read_csv(FILE_NAME, 6);
+        String[][][] array3D = read_csv(FILE_NAME);
 
         // calculate average price
         double sum = 0.0;
         int count = 0;
-        for (int i = 0; i < array3D.length; i++) {
+        for (String[][] strings : array3D) {
             try {
-                double price = Double.parseDouble(array3D[i][4][0]);
+                double price = Double.parseDouble(strings[4][0]);
                 sum += price;
                 count++;
             } catch (NumberFormatException e) {
@@ -333,18 +332,18 @@ public class Main {
         }
     }
 
-    private static String[][][] read_csv(String filename, int collums) {
+    private static String[][][] read_csv(String filename) {
         String line;
         int rowCount = 0;
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
-            while ((line = br.readLine()) != null) {
+            while (br.readLine() != null) {
                 rowCount++;
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        String[][][] array3D = new String[rowCount][collums][];
+        String[][][] array3D = new String[rowCount][6][];
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
             int i = 0;
             while ((line = br.readLine()) != null) {
