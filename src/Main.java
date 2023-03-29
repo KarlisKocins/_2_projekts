@@ -82,8 +82,15 @@ public class Main {
             System.out.println("wrong id");
             return;
         }
-        String city = fields[1].toLowerCase();
-        city = city.substring(0, 1).toUpperCase() + city.substring(1);
+
+        String city = fields[1];
+        String[] cityWords = city.split("\\s");
+        StringBuilder cityCapitalized = new StringBuilder();
+        for (String word : cityWords) {
+            cityCapitalized.append(Character.toUpperCase(word.charAt(0)) + word.substring(1)).append(" ");
+        }
+        city = cityCapitalized.toString().trim();
+
         String date = fields[2];
         int days = 0;
         try {
@@ -168,93 +175,105 @@ public class Main {
             return;
         }
 
-        // extract fields
-        String idStr = fields[0];
-        String city = fields[1].toLowerCase();
-        // Update the city field with uppercase first letter of each word
-        StringBuilder city_name = new StringBuilder();
-        for (String word : city.split("\\s+")) {
-            city_name.append(word.substring(0, 1).toUpperCase() + word.substring(1).toLowerCase() + " ");
+        String id = fields[0];
+        String city = fields[1];
+
+        String[] cityWords = city.split("\\s");
+        StringBuilder cityCapitalized = new StringBuilder();
+        for (String word : cityWords) {
+            cityCapitalized.append(Character.toUpperCase(word.charAt(0)) + word.substring(1)).append(" ");
         }
-        city = city_name.toString().trim();
+        city = cityCapitalized.toString().trim();
+
         String date = fields[2];
-        String daysStr = fields[3];
-        String priceStr = fields[4];
-        String vehicle = fields[5];
+        String days = fields[3];
+        String price = fields[4];
+        String vehicle = fields[5].toUpperCase();
+        if (!vehicle.equals("PLANE") && !vehicle.equals("BUS") && !vehicle.equals("TRAIN") && !vehicle.equals("BOAT")) {
+            System.out.println("wrong vehicle");
+            return;
+        }
 
-        // check id format
-        if (!idStr.matches("\\d{3}")) {
+        // Check if id is a 3-digit integer
+        if (!id.matches("\\d{3}")) {
             System.out.println("wrong id");
             return;
         }
 
-        int id = Integer.parseInt(idStr);
-        int days = Integer.parseInt(daysStr);
-        double price = Double.parseDouble(priceStr);
-
-        // check if trip with given id exists in database
-        boolean found = false;
+        // Read in the contents of the file and update the line with the given id
+        List<String> lines;
+        Path path = Paths.get("db.csv");
         try {
-            File dbFile = new File("db.csv");
-            Scanner scanner = new Scanner(dbFile);
-
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                String[] tripFields = line.split(";");
-                int tripId = Integer.parseInt(tripFields[0]);
-                if (tripId == id) {
-                    found = true;
-                    break;
-                }
-            }
-
-            scanner.close();
-        } catch (FileNotFoundException e) {
-            System.out.println("database file not found");
+            lines = Files.readAllLines(path);
+        } catch (IOException e) {
+            System.out.println("error reading file");
             return;
         }
 
-        // output error message if trip with given id not found
-        if (!found) {
+        boolean idFound = false;
+        for (int i = 0; i < lines.size(); i++) {
+            String line = lines.get(i);
+            if (line.startsWith(id + ";")) {
+                // update the fields that are not empty
+                String[] existingFields = line.split(";");
+                if (!city.equals("")) {
+                    existingFields[1] = city;
+                }
+                if (!date.equals("")) {
+                    existingFields[2] = date;
+                }
+                if (!days.equals("")) {
+                    existingFields[3] = days;
+                }
+                if (!price.equals("")) {
+                    existingFields[4] = price;
+                }
+                if (!vehicle.equals("")) {
+                    existingFields[5] = vehicle;
+                }
+                lines.set(i, String.join(";", existingFields));
+                idFound = true;
+                break;
+            }
+        }
+
+        // If the id was not found in the file, print an error message
+        if (!idFound) {
             System.out.println("wrong id");
             return;
         }
 
-        // update trip information in database
+        // Write the modified contents back to the file
         try {
-            File dbFile = new File("db.csv");
-            File tempFile = new File("temp.csv");
-            Scanner scanner = new Scanner(dbFile);
-            PrintWriter writer = new PrintWriter(tempFile);
-
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                String[] tripFields = line.split(";");
-                int tripId = Integer.parseInt(tripFields[0]);
-                if (tripId == id) {
-                    // update trip information
-                    writer.println(id + ";" + city + ";" + date + ";" + days + ";" + String.format("%.2f", price) + ";" + vehicle);
-                } else {
-                    writer.println(line);
-                }
-            }
-
-            scanner.close();
-            writer.close();
-
-            // delete original database file and rename temporary file to original file name
-            dbFile.delete();
-            tempFile.renameTo(dbFile);
-
-            System.out.println("edited");
-        } catch (FileNotFoundException e) {
-            System.out.println("database file not found");
+            Files.write(path, lines);
+        } catch (IOException e) {
+            System.out.println("error writing file");
         }
+
+        System.out.println("edited");
     }
 
     public static void sort() {
         String[][][] array3D = read_csv(FILE_NAME, 6);
-        Arrays.sort(array3D, Comparator.comparing(a -> a[2][0]));
+
+        Arrays.sort(array3D, (a, b) -> {
+            String[] date1 = a[2][0].split("/");
+            String[] date2 = b[2][0].split("/");
+            int year1 = Integer.parseInt(date1[2]);
+            int year2 = Integer.parseInt(date2[2]);
+            int month1 = Integer.parseInt(date1[1]);
+            int month2 = Integer.parseInt(date2[1]);
+            int day1 = Integer.parseInt(date1[0]);
+            int day2 = Integer.parseInt(date2[0]);
+            if (year1 != year2) {
+                return year1 - year2;
+            } else if (month1 != month2) {
+                return month1 - month2;
+            } else {
+                return day1 - day2;
+            }
+        });
+
         try (BufferedWriter writer = new BufferedWriter(new FileWriter("db.csv"))) {
             for (int i = 0; i < array3D.length; i++) {
                 writer.write(array3D[i][0][0] + ";" + array3D[i][1][0] + ";" + array3D[i][2][0] + ";" + array3D[i][3][0] + ";" + array3D[i][4][0] + ";" + array3D[i][5][0]);
