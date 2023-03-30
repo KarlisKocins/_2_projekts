@@ -9,9 +9,9 @@ public class Main {
     public static void main(String[] args) {
         Scanner input = new Scanner(System.in);
         String command = null;
-            do {
-                try {
-                System.out.print("Enter command: ");
+        System.out.print("Enter command: ");
+        do {
+            try {
                 command = input.nextLine().trim().toLowerCase();
                 String[] command_full = command.split(" ", 2);
 
@@ -41,13 +41,13 @@ public class Main {
                         System.out.println("Exiting program...");
                         break;
                     default:
-                        System.out.println("Invalid command!");
+                        System.out.println("wrong command");
                 }
-                }catch (ArrayIndexOutOfBoundsException e){
-                    System.out.println("Wrong command!");
-                }
-            } while (!Objects.equals(command, "exit"));
-        
+            }catch (ArrayIndexOutOfBoundsException e){
+                System.out.println("Wrong command!");
+            }
+        } while (!Objects.equals(command, "exit"));
+
         input.close();
     }
 
@@ -56,14 +56,16 @@ public class Main {
         String[][][] array3D = read_csv(FILE_NAME);
         // print the 3D array
         System.out.println("------------------------------------------------------------");
-        System.out.format("%-4s%-21s%-11s%-6s%-10s%-8s%n", "ID", "City", "Date", "Days", "Price", "Vehicle");
+        System.out.format("%-4s%-21s%-11s%6s%10s%8s%n", "ID", "City", "Date", "Days", "Price", "Vehicle");
         System.out.println("------------------------------------------------------------");
         for (String[][] strings : array3D) {
-            System.out.format("%-4s%-21s%-11s%-6s%-10s%-8s%n", strings[0][0], strings[1][0], strings[2][0],
-                    strings[3][0], strings[4][0], strings[5][0]);
+            System.out.format("%-4s%-21s%-11s%-6s%-10s %-7s%n", strings[0][0], strings[1][0], strings[2][0],
+                    String.format("%-6s", String.format("%6s", strings[3][0])),
+                    String.format("%-10s", String.format("%10s", strings[4][0])), strings[5][0]);
         }
         System.out.println("------------------------------------------------------------");
     }
+
 
     public static void add(String field) {
         String[] fields = field.split(";");
@@ -117,7 +119,7 @@ public class Main {
         } catch (IOException e) {
             System.out.println("error writing to file");
         }
-        System.out.println("trip added");
+        System.out.println("added");
     }
 
     public static void del(String tokens) {
@@ -249,7 +251,7 @@ public class Main {
             System.out.println("error writing file");
         }
 
-        System.out.println("edited");
+        System.out.println("changed");
     }
 
     public static void sort() {
@@ -292,14 +294,15 @@ public class Main {
         boolean found = false;
 
         System.out.println("------------------------------------------------------------");
-        System.out.format("%-4s%-21s%-11s%-6s%-10s%-8s%n", "ID", "City", "Date", "Days", "Price", "Vehicle");
+        System.out.format("%-4s%-21s%-11s%6s%10s%8s%n", "ID", "City", "Date", "Days", "Price", "Vehicle");
         System.out.println("------------------------------------------------------------");
 
         for (String[][] trip : trips) {
             double price = Double.parseDouble(trip[4][0]);
             if (price <= targetPrice) {
-                System.out.format("%-4s%-21s%-11s%-6s%-10s%-8s%n",
-                        trip[0][0], trip[1][0], trip[2][0], trip[3][0], trip[4][0], trip[5][0]);
+                System.out.format("%-4s%-21s%-11s%-6s%-10s %-7s%n", trip[0][0], trip[1][0], trip[2][0],
+                        String.format("%-6s", String.format("%6s", trip[3][0])),
+                        String.format("%-10s", String.format("%10s", trip[4][0])), trip[5][0]);
                 found = true;
             }
         }
@@ -328,7 +331,7 @@ public class Main {
             System.out.println("No valid prices found.");
         } else {
             double avg = sum / count;
-            System.out.printf("Average price: %.2f\n", avg);
+            System.out.printf("average=%.2f\n", avg);
         }
     }
 
