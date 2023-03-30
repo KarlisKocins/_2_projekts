@@ -2,14 +2,20 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class Main {
     static String FILE_NAME = "db.csv";
     public static void main(String[] args) {
+
+        //region Scanner and asks for input
         Scanner input = new Scanner(System.in);
         String command = null;
         System.out.print("Enter command: ");
+        //endregion
+
+        //region Main switch function
         do {
             try {
                 command = input.nextLine().trim().toLowerCase();
@@ -49,12 +55,17 @@ public class Main {
         } while (!Objects.equals(command, "exit"));
 
         input.close();
+        //endregion
+
     }
 
     private static void print() {
-        // code to display all records in the db.csv file
+
+        //region Call read_csv function
         String[][][] array3D = read_csv(FILE_NAME);
-        // print the 3D array
+        //endregion
+
+        //region print the 3D array
         System.out.println("------------------------------------------------------------");
         System.out.format("%-4s%-21s%-11s%6s%10s%8s%n", "ID", "City", "Date", "Days", "Price", "Vehicle");
         System.out.println("------------------------------------------------------------");
@@ -64,15 +75,22 @@ public class Main {
                     String.format("%-10s", String.format("%10s", strings[4][0])), strings[5][0]);
         }
         System.out.println("------------------------------------------------------------");
+        //endregion
+
     }
 
-
     public static void add(String field) {
+
+        //region split input and check ID
         String[] fields = field.split(";");
+
         if (fields.length != 6) {
             System.out.println("wrong field count");
             return;
         }
+        //endregion
+
+        //region ID verify
         String id;
         try {
             id = fields[0];
@@ -84,7 +102,28 @@ public class Main {
             System.out.println("wrong id");
             return;
         }
+        //endregion
 
+        // region Check if id is existing!
+        Path path = Paths.get(FILE_NAME);
+        List<String> lines;
+        try {
+            lines = Files.readAllLines(path);
+        } catch (IOException e) {
+            System.out.println("error reading file");
+            return;
+        }
+
+        for (String line : lines) {
+            String[] data = line.split(";");
+            if (data[0].equals(id)) {
+                System.out.println("id already exists");
+                return;
+            }
+        }
+        //endregion
+
+        // region Check inputs!
         String city = fields[1];
         String[] cityWords = city.split("\\s");
         StringBuilder cityCapitalized = new StringBuilder();
@@ -93,12 +132,23 @@ public class Main {
         }
         city = cityCapitalized.toString().trim();
 
+
         String date = fields[2];
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+        dateFormat.setLenient(false);
+        Date dates;
+        try{
+            dates = dateFormat.parse(date);
+        }catch (Exception e){
+            System.out.println("wrong date");
+            return;
+        }
+
         int days;
         try {
             days = Integer.parseInt(fields[3]);
         } catch (NumberFormatException e) {
-            System.out.println("wrong days");
+            System.out.println("wrong day count");
             return;
         }
         double price;
@@ -113,24 +163,30 @@ public class Main {
             System.out.println("wrong vehicle");
             return;
         }
+        //endregion
+
+        //region WriteToFile!
         try (BufferedWriter writer = new BufferedWriter(new FileWriter("db.csv", true))) {
             writer.write(id + ";" + city + ";" + date + ";" + days + ";" + String.format("%.2f", price) + ";" + vehicle);
             writer.newLine();
         } catch (IOException e) {
             System.out.println("error writing to file");
         }
+        //endregion
+
         System.out.println("added");
     }
 
     public static void del(String tokens) {
 
-        // Check if id is a 3-digit integer
+        //region Check if id is a 3-digit integer
         if (!tokens.matches("\\d{3}")) {
             System.out.println("wrong id");
             return;
         }
+        //endregion
 
-        // Read in the contents of the file and remove the line with the given id
+        //region Read in the contents of the file and remove the line with the given id
         List<String> lines;
         Path path = Paths.get("db.csv");
         try {
@@ -141,67 +197,113 @@ public class Main {
         }
 
         boolean idFound = false;
-        for (Iterator<String> it = lines.iterator(); it.hasNext(); ) {
-            String line = it.next();
+        for (int i = 0; i < lines.size(); i++) {
+            String line = lines.get(i);
             if (line.startsWith(tokens + ";")) {
-                it.remove();
+                lines.remove(i);
                 idFound = true;
                 break;
             }
         }
-
-        // If the id was not found in the file, print an error message
         if (!idFound) {
             System.out.println("wrong id");
             return;
         }
+        //endregion
 
-        // Write the modified contents back to the file
+        //region Write the modified contents back to the file
         try {
             Files.write(path, lines);
         } catch (IOException e) {
             System.out.println("error writing file");
         }
+        //endregion
 
         System.out.println("deleted");
     }
 
     public static void edit(String query) {
-        // split query string into fields
-        String[] fields = query.split(";");
 
-        // check number of fields
+        //region split query string into fields
+        String[] fields = query.split(";");
+        //endregion
+
+        //region check number of fields
         if (fields.length != 6) {
             System.out.println("wrong field count");
             return;
         }
+        //endregion
 
-        String id = fields[0];
-        String city = fields[1];
-
-        String[] cityWords = city.split("\\s");
-        StringBuilder cityCapitalized = new StringBuilder();
-        for (String word : cityWords) {
-            cityCapitalized.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1)).append(" ");
+        //region Verify and set iD
+        String id;
+        try{
+            id = fields[0];
+            if (!id.matches("\\d{3}")) {
+                System.out.println("wrong id");
+                return;
+            }
+        }catch (NumberFormatException e){
+            System.out.println("wrong id");
+            return;
         }
-        city = cityCapitalized.toString().trim();
+        //endregion
 
-        String date = fields[2];
+        //region Verify and set inputs
+        String city = fields[1];
+        if(!Objects.equals(city, "")){
+            String[] cityWords = city.split("\\s");
+            StringBuilder cityCapitalized = new StringBuilder();
+            for (String word : cityWords) {
+                cityCapitalized.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1)).append(" ");
+            }
+            city = cityCapitalized.toString().trim();
+        }
+
+
+        String date_var = fields[2];
+        if (!Objects.equals(date_var, "")) {
+            SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+            formatter.setLenient(false);
+            Date date;
+            try {
+                date = formatter.parse(date_var);
+                if (!formatter.format(date).equals(date_var)) {
+                    System.out.println("wrong date");
+                    return;
+                }
+            } catch (Exception e) {
+                System.out.println("wrong date");
+                return;
+            }
+        }
         String days = fields[3];
-        String price = fields[4];
+        if (!Objects.equals(days, "")){
+            try {
+                int day = Integer.parseInt(days);
+            } catch (NumberFormatException e) {
+                System.out.println("wrong days");
+                return;
+            }
+        }
+        String prices = fields[4];
+        Double price = 0.00d;
+        if(!Objects.equals(prices, "")){
+            try {
+                price = Double.parseDouble(prices);
+            } catch (NumberFormatException e) {
+                System.out.println("wrong price");
+                return;
+            }
+        }
         String vehicle = fields[5].toUpperCase();
         if (!vehicle.equals("PLANE") && !vehicle.equals("BUS") && !vehicle.equals("TRAIN") && !vehicle.equals("BOAT") && !vehicle.equals("")) {
             System.out.println("wrong vehicle");
             return;
         }
+        //endregion
 
-        // Check if id is a 3-digit integer
-        if (!id.matches("\\d{3}")) {
-            System.out.println("wrong id");
-            return;
-        }
-
-        // Read in the contents of the file and update the line with the given id
+        //region Read in the contents of the file and update the line with the given id
         List<String> lines;
         Path path = Paths.get("db.csv");
         try {
@@ -220,14 +322,14 @@ public class Main {
                 if (!city.equals("")) {
                     existingFields[1] = city;
                 }
-                if (!date.equals("")) {
-                    existingFields[2] = date;
+                if (!date_var.equals("")) {
+                    existingFields[2] = date_var;
                 }
                 if (!days.equals("")) {
                     existingFields[3] = days;
                 }
-                if (!price.equals("")) {
-                    existingFields[4] = price;
+                if (!prices.equals("")) {
+                    existingFields[4] = String.format("%.2f", price);
                 }
                 if (!vehicle.equals("")) {
                     existingFields[5] = vehicle;
@@ -237,26 +339,33 @@ public class Main {
                 break;
             }
         }
+        //endregion
 
-        // If the id was not found in the file, print an error message
+        //region If the id was not found in the file, print an error message
         if (!idFound) {
             System.out.println("wrong id");
             return;
         }
+        //endregion
 
-        // Write the modified contents back to the file
+        //region Write the modified contents back to the file
         try {
             Files.write(path, lines);
         } catch (IOException e) {
             System.out.println("error writing file");
         }
+        //endregion
 
         System.out.println("changed");
     }
 
     public static void sort() {
-        String[][][] array3D = read_csv(FILE_NAME);
 
+        //region Call read_csv function
+        String[][][] array3D = read_csv(FILE_NAME);
+        //endregion
+
+        //region Sorter!
         Arrays.sort(array3D, (a, b) -> {
             String[] date1 = a[2][0].split("/");
             String[] date2 = b[2][0].split("/");
@@ -274,7 +383,9 @@ public class Main {
                 return day1 - day2;
             }
         });
+        //endregion
 
+        //region Write to file!
         try (BufferedWriter writer = new BufferedWriter(new FileWriter("db.csv"))) {
             for (String[][] strings : array3D) {
                 writer.write(strings[0][0] + ";" + strings[1][0] + ";" + strings[2][0] + ";" + strings[3][0] + ";" + strings[4][0] + ";" + strings[5][0]);
@@ -283,16 +394,33 @@ public class Main {
         } catch (IOException e) {
             System.out.println("error writing to file");
         }
+        //endregion
+
         System.out.println("sorted");
     }
 
     public static void find(String tokens) {
+
+        //region Find the "find" value
         String[] fields = tokens.split(" ");
-        double targetPrice = Double.parseDouble(fields[0]);
+        //endregion
 
+        //region Convert it to float and verify it!
+        double targetPrice = 0.00d;
+        try {
+            targetPrice = Double.parseDouble(fields[0]);
+        }catch (NumberFormatException e){
+            System.out.println("Wrong find num: " + fields[0]);
+            return;
+        }
+        //endregion
+
+        //region Call read_csv function
         String[][][] trips = read_csv(FILE_NAME);
-        boolean found = false;
+        //endregion
 
+        //region print the table with the found values!
+        boolean found = false;
         System.out.println("------------------------------------------------------------");
         System.out.format("%-4s%-21s%-11s%6s%10s%8s%n", "ID", "City", "Date", "Days", "Price", "Vehicle");
         System.out.println("------------------------------------------------------------");
@@ -310,12 +438,17 @@ public class Main {
             System.out.println("No trips found.");
         }
         System.out.println("------------------------------------------------------------");
+        //endregion
+
     }
 
     private static void avg() {
-        String[][][] array3D = read_csv(FILE_NAME);
 
-        // calculate average price
+        //region Call read_csv funtion
+        String[][][] array3D = read_csv(FILE_NAME);
+        //endregion
+
+        //region calculate average price
         double sum = 0.0;
         int count = 0;
         for (String[][] strings : array3D) {
@@ -327,15 +460,22 @@ public class Main {
                 // ignore malformed prices
             }
         }
+        //endregion
+
+        //region Cauculate avrage!
         if (count == 0) {
             System.out.println("No valid prices found.");
         } else {
             double avg = sum / count;
             System.out.printf("average=%.2f\n", avg);
         }
+        //endregion
+
     }
 
     private static String[][][] read_csv(String filename) {
+
+        //region Read the row count of the file db.csv
         String line;
         int rowCount = 0;
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
@@ -345,7 +485,9 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        //endregion
 
+        //region make a new 3D array that later returns
         String[][][] array3D = new String[rowCount][6][];
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
             int i = 0;
@@ -359,6 +501,11 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        //endregion
+
+        //region Return array
         return array3D;
+        //endregion
+
     }
 }
